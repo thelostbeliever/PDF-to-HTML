@@ -1,50 +1,28 @@
-FROM ubuntu:22.04
+# Stage 1: Use prebuilt pdf2htmlEX image
+FROM bwits/pdf2htmlex AS pdf2html-base
 
-# Set non-interactive mode to avoid prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
+# Stage 2: Add Node.js app
+FROM node:18-slim
 
-# Update package lists and install necessary packages
-RUN apt-get update && \
-    apt-get install -y \
-    wget \
-    curl \
-    git \
-    make \
-    cmake \
-    g++ \
-    pkg-config \
-    libfontforge-dev \
-    poppler-utils \
-    libpoppler-dev \
-    libjpeg-dev \
-    fontforge \
-    nodejs \
-    npm \
-    build-essential \
-    libxml2-dev \
-    libxslt1-dev \
-    libpng-dev \
-    libgif-dev \
-    libfreetype6-dev \
-    python3 \
-    python3-pip \
-    automake && \
-    rm -rf /var/lib/apt/lists/*
+# Copy pdf2htmlEX binaries from the base image
+COPY --from=pdf2html-base /usr/local/bin/pdf2htmlEX /usr/local/bin/pdf2htmlEX
+COPY --from=pdf2html-base /usr/local/share/fonts /usr/local/share/fonts
 
-# Clone and build pdf2htmlEX
-RUN git clone https://github.com/coolwanglu/pdf2htmlEX.git /pdf2htmlEX && \
-    cd /pdf2htmlEX && \
-    make && \
-    make install
-
-# Set working directory
+# Create app directory
 WORKDIR /app
 
-# Copy project files
+# Install dependencies
+COPY package.json ./
+RUN npm install
+
+# Copy source code
 COPY . .
 
-# Install Node.js dependencies
-RUN npm install
+# Create required directories
+RUN mkdir -p uploads output
+
+# Expose port
+EXPOSE 3000
 
 # Start the server
 CMD ["npm", "start"]
