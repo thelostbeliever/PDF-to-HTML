@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-# Install required dependencies and pdf2htmlEX
+# Install required dependencies
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
@@ -24,13 +24,19 @@ RUN apt-get update && apt-get install -y \
     libgif-dev \
     libfreetype6-dev \
     python3 \
-    python3-pip
+    python3-pip \
+    automake
 
-# Clone pdf2htmlEX repository and build
-RUN git clone https://github.com/coolwanglu/pdf2htmlEX.git && \
-    cd pdf2htmlEX && \
+# Clone pdf2htmlEX from the GitHub repository
+RUN git clone https://github.com/coolwanglu/pdf2htmlEX.git /pdf2htmlEX
+
+# Build pdf2htmlEX from source
+RUN cd /pdf2htmlEX && \
     make && \
     make install
+
+# Verify installation
+RUN pdf2htmlEX --version
 
 # Set working directory
 WORKDIR /app
