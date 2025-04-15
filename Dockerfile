@@ -1,28 +1,26 @@
-# Stage 1: Use prebuilt pdf2htmlEX image
-FROM bwits/pdf2htmlex AS pdf2html-base
+# Use a base image that has pdf2htmlEX pre-installed
+FROM bwits/pdf2htmlex
 
-# Stage 2: Add Node.js app
-FROM node:18-slim
+# Install Node.js (LTS version) and npm
+RUN apt-get update && \
+    apt-get install -y curl gnupg && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    node -v && npm -v
 
-# Copy pdf2htmlEX binaries from the base image
-COPY --from=pdf2html-base /usr/local/bin/pdf2htmlEX /usr/local/bin/pdf2htmlEX
-COPY --from=pdf2html-base /usr/local/share/fonts /usr/local/share/fonts
-
-# Create app directory
+# Set working directory
 WORKDIR /app
 
-# Install dependencies
+# Copy app files
 COPY package.json ./
 RUN npm install
-
-# Copy source code
 COPY . .
 
-# Create required directories
+# Create upload/output folders
 RUN mkdir -p uploads output
 
-# Expose port
+# Expose the port your app runs on
 EXPOSE 3000
 
-# Start the server
+# Start the app
 CMD ["npm", "start"]
