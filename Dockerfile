@@ -14,9 +14,23 @@ RUN apt-get update && apt-get install -y \
     libpoppler-dev \
     libjpeg-dev \
     fontforge \
-    pdf2htmlex \
     nodejs \
-    npm
+    npm \
+    build-essential \
+    libxml2-dev \
+    libxslt1-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libgif-dev \
+    libfreetype6-dev \
+    python3 \
+    python3-pip
+
+# Clone pdf2htmlEX repository and build
+RUN git clone https://github.com/coolwanglu/pdf2htmlEX.git && \
+    cd pdf2htmlEX && \
+    make && \
+    make install
 
 # Set working directory
 WORKDIR /app
