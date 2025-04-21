@@ -1,22 +1,10 @@
-# Use a base image that already includes pdf2htmlEX
-FROM minidocks/pdf2htmlex:latest as pdf2htmlex
+# Use bwits/pdf2htmlex as the base image which already includes pdf2htmlEX
+FROM bwits/pdf2htmlex:alpine
 
-# Use Node.js official image
-FROM node:18-slim
+# Install Node.js
+RUN apk add --update nodejs npm
 
-# Copy pdf2htmlEX from the minidocks image
-COPY --from=pdf2htmlex /usr/local/bin/pdf2htmlEX /usr/local/bin/
-COPY --from=pdf2htmlex /usr/local/share/pdf2htmlEX /usr/local/share/pdf2htmlEX
-COPY --from=pdf2htmlex /lib/ /lib/
-COPY --from=pdf2htmlex /usr/lib/ /usr/lib/
-COPY --from=pdf2htmlex /usr/local/lib/ /usr/local/lib/
-COPY --from=pdf2htmlex /usr/share/fonts/ /usr/share/fonts/
-COPY --from=pdf2htmlex /usr/share/poppler/ /usr/share/poppler/
-
-# Set up library paths
-ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:/lib
-
-# Create app directory first
+# Create app directory explicitly
 RUN mkdir -p /app
 
 # Set working directory

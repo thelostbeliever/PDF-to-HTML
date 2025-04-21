@@ -1,12 +1,13 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import PDFToHTML from 'pdftohtmljs';
 
-const execPromise = promisify(exec);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
- * Convert PDF file to HTML using pdf2htmlEX
+ * Convert PDF file to HTML using pdftohtmljs
  * 
  * @param {string} inputPath - Path to the input PDF file
  * @param {string} outputDir - Directory where the HTML output will be saved
@@ -20,30 +21,34 @@ export async function convertPdfToHtml(inputPath, outputDir) {
       return false;
     }
     
-    // Create a command to convert PDF to HTML using pdf2htmlEX
-    // --dest-dir: Specify output directory
-    // --zoom: Zoom factor, default is 1.5
-    // --embed cfijo: Embed fonts, frames, images, JavaScript, and outlines
-    const command = `pdf2htmlEX --dest-dir "${outputDir}" --zoom 1.5 --embed cfijo "${inputPath}" output.html`;
+    const outputHtml = path.join(outputDir, 'output.html');
     
-    console.log(`Executing: ${command}`);
+    // Create instance with input PDF and HTML output path
+    const converter = new PDFToHTML(inputPath, outputHtml);
     
-    const { stdout, stderr } = await execPromise(command);
+    // Set conversion options
+    converter.convert({
+      'zoom': 1.5,       // Zoom factor
+      'embed': 'cfijo',  // Embed fonts, frames, images, JavaScript, and outlines
+      'dest-dir': outputDir // Output directory for resources
+    }).then(() => {
+      console.log(`PDF conversion complete: ${outputHtml}`);
+    }).catch(err => {
+      console.error('Conversion error:', err);
+    });
     
-    if (stderr && !stderr.includes('Warning')) {
-      console.error('Conversion stderr:', stderr);
-    }
-    
-    console.log('Conversion stdout:', stdout);
-    
-    // Verify the output file exists
-    const outputFile = path.join(outputDir, 'output.html');
-    if (fs.existsSync(outputFile)) {
-      return true;
-    } else {
-      console.error(`Output file not created: ${outputFile}`);
-      return false;
-    }
+    // Return a Promise for the conversion
+    return new Promise((resolve) => {
+      converter.success(() => {
+        console.log('Conversion successfully finished');
+        resolve(true);
+      });
+      
+      converter.error((err) => {
+        console.error('Conversion error:', err);
+        resolve(false);
+      });
+    });
   } catch (error) {
     console.error('Error converting PDF to HTML:', error);
     return false;

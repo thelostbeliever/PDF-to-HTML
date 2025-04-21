@@ -44,7 +44,22 @@ app.use(express.json({ limit: '15mb' })); // For parsing base64 encoded PDFs
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json({ 
+    status: 'ok',
+    message: 'PDF to HTML API is running'
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    service: 'PDF to HTML Conversion API',
+    endpoints: {
+      health: '/api/health',
+      uploadPdf: '/api/pdf-to-html/upload',
+      base64Pdf: '/api/pdf-to-html/base64'
+    }
+  });
 });
 
 // Route for PDF file upload to HTML conversion
@@ -118,18 +133,23 @@ async function handlePdfConversion(filePath) {
 
   console.log(`Converting file: ${filePath} to directory: ${outputDir}`);
   
-  const converted = await convertPdfToHtml(filePath, outputDir);
-  
-  if (!converted || !fs.existsSync(outputHtml)) {
-    console.error('Conversion failed - output file not found');
-    return { success: false, error: 'Conversion failed' };
-  }
+  try {
+    const converted = await convertPdfToHtml(filePath, outputDir);
+    
+    if (!converted || !fs.existsSync(outputHtml)) {
+      console.error('Conversion failed - output file not found');
+      return { success: false, error: 'Conversion failed' };
+    }
 
-  return { 
-    success: true, 
-    outputPath: outputHtml,
-    outputDir: outputDir
-  };
+    return { 
+      success: true, 
+      outputPath: outputHtml,
+      outputDir: outputDir
+    };
+  } catch (error) {
+    console.error('Conversion error:', error);
+    return { success: false, error: error.message || 'Unknown conversion error' };
+  }
 }
 
 // Helper function to clean up files
@@ -149,5 +169,5 @@ function cleanupFiles(filePath, outputDir) {
 }
 
 app.listen(PORT, () => {
-  console.log(`🚀 API server running at http://localhost:${PORT}`);
+  console.log(`🚀 PDF to HTML API server running at http://localhost:${PORT}`);
 });
