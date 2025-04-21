@@ -1,8 +1,21 @@
-# Use bwits/pdf2htmlex as the base image which already includes pdf2htmlEX
-FROM bwits/pdf2htmlex:alpine
+# Use debian:bullseye-slim as base
+FROM debian:bullseye-slim
 
-# Install Node.js
-RUN apk add --update nodejs npm
+# Avoid interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install Node.js and pdf2htmlEX
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    lsb-release \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get update && apt-get install -y \
+    nodejs \
+    poppler-utils \
+    pdf2htmlex \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create app directory explicitly
 RUN mkdir -p /app
