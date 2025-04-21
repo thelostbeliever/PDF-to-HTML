@@ -1,26 +1,6 @@
-# Use debian:bullseye-slim as base
-FROM debian:bullseye-slim
+FROM node:18-slim
 
-# Avoid interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install Node.js and pdf2htmlEX
-RUN apt-get update && apt-get install -y \
-    curl \
-    gnupg \
-    lsb-release \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get update && apt-get install -y \
-    nodejs \
-    poppler-utils \
-    pdf2htmlex \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create app directory explicitly
-RUN mkdir -p /app
-
-# Set working directory
+# Create app directory
 WORKDIR /app
 
 # Copy package.json and package-lock.json
@@ -32,7 +12,7 @@ RUN npm install
 # Copy the rest of the application
 COPY . .
 
-# Create directories for uploads and output with proper permissions
+# Create directories for uploads and output
 RUN mkdir -p uploads output && chmod 777 uploads output
 
 # Expose the port the app runs on
